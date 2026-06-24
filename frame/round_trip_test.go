@@ -7,10 +7,10 @@ import (
 
 func TestFrameMarshalUnmarshal(t *testing.T) {
 	original := Frame{
-		ident:        DataFrame,
-		connectionID: 42,
-		payloadSize:  uint32(len([]byte("hello world"))),
-		payload:      []byte("hello world"),
+		Ident:        DataFrame,
+		ConnectionID: 42,
+		PayloadSize:  uint32(len([]byte("hello world"))),
+		Payload:      []byte("hello world"),
 	}
 
 	var buf bytes.Buffer
@@ -19,7 +19,7 @@ func TestFrameMarshalUnmarshal(t *testing.T) {
 		writer: &buf,
 	}
 
-	err := writer.WriteFrame(original)
+	err := writer.WriteFrame(&original)
 	if err != nil {
 		t.Fatalf("failed to marshal frame: %v", err)
 	}
@@ -33,35 +33,35 @@ func TestFrameMarshalUnmarshal(t *testing.T) {
 		t.Fatalf("failed to unmarshal frame: %v", err)
 	}
 
-	if decoded.ident != original.ident {
+	if decoded.Ident != original.Ident {
 		t.Fatalf(
-			"identifier mismatch. expected=%v got=%v",
-			original.ident,
-			decoded.ident,
+			"Identifier mismatch. expected=%v got=%v",
+			original.Ident,
+			decoded.Ident,
 		)
 	}
 
-	if decoded.connectionID != original.connectionID {
+	if decoded.ConnectionID != original.ConnectionID {
 		t.Fatalf(
-			"connectionID mismatch. expected=%d got=%d",
-			original.connectionID,
-			decoded.connectionID,
+			"ConnectionID mismatch. expected=%d got=%d",
+			original.ConnectionID,
+			decoded.ConnectionID,
 		)
 	}
 
-	if decoded.payloadSize != original.payloadSize {
+	if decoded.PayloadSize != original.PayloadSize {
 		t.Fatalf(
-			"payloadSize mismatch. expected=%d got=%d",
-			original.payloadSize,
-			decoded.payloadSize,
+			"PayloadSize mismatch. expected=%d got=%d",
+			original.PayloadSize,
+			decoded.PayloadSize,
 		)
 	}
 
-	if !bytes.Equal(decoded.payload, original.payload) {
+	if !bytes.Equal(decoded.Payload, original.Payload) {
 		t.Fatalf(
-			"payload mismatch. expected=%q got=%q",
-			original.payload,
-			decoded.payload,
+			"Payload mismatch. expected=%q got=%q",
+			original.Payload,
+			decoded.Payload,
 		)
 	}
 }

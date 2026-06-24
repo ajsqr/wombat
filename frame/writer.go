@@ -8,30 +8,30 @@ import (
 // writer deals with marshalling a frame to a slice of bytes so that it can be sent through the stream
 
 type Writer interface {
-	WriteFrame(f Frame) error
+	WriteFrame(f *Frame) error
 }
 
 type FrameWriter struct {
 	writer io.Writer
 }
 
-func (fw *FrameWriter) WriteFrame(f Frame) error {
-	err := fw.writeFrameIdentifier(f.ident)
+func (fw *FrameWriter) WriteFrame(f *Frame) error {
+	err := fw.writeFrameIdentifier(f.Ident)
 	if err != nil {
 		return err
 	}
 
-	err = fw.writeConnectionID(f.connectionID)
+	err = fw.writeConnectionID(f.ConnectionID)
 	if err != nil {
 		return err
 	}
 
-	err = fw.writePayloadSize(f.payloadSize)
+	err = fw.writePayloadSize(f.PayloadSize)
 	if err != nil {
 		return err
 	}
 
-	err = fw.writePayload(f.payload)
+	err = fw.writePayload(f.Payload)
 	if err != nil {
 		return err
 	}

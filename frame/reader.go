@@ -23,22 +23,22 @@ type FrameReader struct {
 func (r *FrameReader) ReadFrame() (*Frame, error) {
 	var err error
 	var frame Frame
-	frame.ident, err = r.readFrameIdentifier()
+	frame.Ident, err = r.readFrameIdentifier()
 	if err != nil {
 		return nil, err
 	}
 
-	frame.connectionID, err = r.readConnectionId()
+	frame.ConnectionID, err = r.readConnectionId()
 	if err != nil {
 		return nil, err
 	}
 
-	frame.payloadSize, err = r.readPayloadSize()
+	frame.PayloadSize, err = r.readPayloadSize()
 	if err != nil {
 		return nil, err
 	}
 
-	frame.payload, err = r.readPayload(frame.payloadSize)
+	frame.Payload, err = r.readPayload(frame.PayloadSize)
 	if err != nil {
 		return nil, err
 	}
