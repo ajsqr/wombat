@@ -11,6 +11,12 @@ import (
 
 var _ Reader = &FrameReader{}
 
+func NewReader(reader io.Reader) *FrameReader {
+	return &FrameReader{
+		reader: reader,
+	}
+}
+
 type Reader interface {
 	ReadFrame() (*Frame, error)
 }

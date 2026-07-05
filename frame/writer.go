@@ -7,6 +7,12 @@ import (
 
 // writer deals with marshalling a frame to a slice of bytes so that it can be sent through the stream
 
+func NewWriter(writer io.Writer) *FrameWriter {
+	return &FrameWriter{
+		writer: writer,
+	}
+}
+
 type Writer interface {
 	WriteFrame(f *Frame) error
 }
