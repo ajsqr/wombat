@@ -1,11 +1,9 @@
 package session
 
 import (
-	"net"
 	"sync/atomic"
 
 	"github.com/ajsqr/wombat/cmap"
-	"github.com/ajsqr/wombat/frame"
 	"github.com/ajsqr/wombat/receiver"
 )
 
@@ -22,14 +20,8 @@ func NewSessionStore() *SessionStore {
 	}
 }
 
-func (ss *SessionStore) New(conn net.Conn) *Session {
-	var s Session
-	s.sessionID = ss.counter.Add(1)
-	s.inbox = make(chan *frame.Frame)
-	s.conn = conn
-	// once the session has been crafted, add it to the in-memory store
-	ss.store.Set(s.sessionID, &s)
-	return &s
+func (ss *SessionStore) Create(s *Session) {
+	ss.store.Set(s.sessionID, s)
 }
 
 func (ss *SessionStore) GetByID(id uint32) (*Session, error) {

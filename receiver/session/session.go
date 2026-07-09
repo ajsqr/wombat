@@ -9,6 +9,11 @@ import (
 	"github.com/ajsqr/wombat/receiver"
 )
 
+const (
+	defaultInboxSize  = 10
+	defaultBufferSize = 1024
+)
+
 var _ receiver.Receiver = &Session{}
 
 type Session struct {
@@ -27,6 +32,34 @@ type Session struct {
 	bufferSize int
 	// disp deals with frame transportation between a session and the tunnel
 	disp dispatcher.Dispatcher
+}
+
+func NewSession(id uint32, conn net.Conn, disp dispatcher.Dispatcher) *Session {
+	var s Session
+	s.sessionID = id
+	s.inbox = make(chan *frame.Frame, defaultInboxSize)
+	s.conn = conn
+	s.errChan = make(chan error, 1)
+	s.closed = make(chan struct{})
+	s.bufferSize = defaultBufferSize
+	s.disp = disp
+	return &s
+}
+
+func (s *Session) GetID() uint32 {
+	return s.sessionID
+}
+
+func (s *Session) Close() error {
+	close(s.inbox)
+	err := s.conn.Close()
+	if err != nil {
+		return err
+	}
+
+	close(s.errChan)
+	close(s.closed)
+	return nil
 }
 
 // Receive method exists for receiving frames from a dispatcher

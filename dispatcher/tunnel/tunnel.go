@@ -31,6 +31,7 @@ type Tunnel struct {
 func NewTunnel(conn net.Conn, store *session.SessionStore, handler endpoint.Endpoint) *Tunnel {
 	tunnel := Tunnel{}
 
+	tunnel.conn = conn
 	tunnel.frameWriter = frame.NewWriter(conn)
 	tunnel.frameReader = frame.NewReader(conn)
 	tunnel.dispatchQueue = make(chan *frame.Frame, defaultQueueSize)
@@ -76,7 +77,7 @@ func (t *Tunnel) recvLoop() {
 		switch f.Ident {
 		case frame.OpenConnection, frame.CloseConnection, frame.Ping, frame.Pong:
 			// control frames
-			if err := t.handler.Handle(f); err != nil {
+			if err := t.handler.Handle(f, t); err != nil {
 				t.errChan <- err
 				return
 			}

@@ -1,7 +1,9 @@
 package client
 
 import (
+	"log/slog"
 	"net"
+	"os"
 
 	"github.com/ajsqr/wombat/dispatcher/tunnel"
 	"github.com/ajsqr/wombat/receiver/session"
@@ -25,7 +27,8 @@ func (a *Agent) Run() error {
 	}
 
 	sessionStore := session.NewSessionStore()
-	clientHandler := NewClientHandler(sessionStore, "", nil)
-	tunnel := tunnel.NewTunnel(conn, sessionStore, clientHandler)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	endpoint := NewClientHandler(sessionStore, a.LocalServer, logger)
+	tunnel := tunnel.NewTunnel(conn, sessionStore, endpoint)
 	return tunnel.Stream()
 }
