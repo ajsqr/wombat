@@ -34,6 +34,7 @@ type AgentHandler struct {
 // It is currently not implemented. Once the agent receives an Open
 // control frame, it needs to generate a new session and
 func (ah *AgentHandler) Handle(f *frame.Frame, d dispatcher.Dispatcher) error {
+	ah.logger.Info("received a control frame")
 	switch f.Ident {
 	case frame.OpenConnection:
 		// a new control frame to open a new connection
@@ -45,7 +46,7 @@ func (ah *AgentHandler) Handle(f *frame.Frame, d dispatcher.Dispatcher) error {
 		}
 
 		s := ah.createSession(f.ConnectionID, conn, d)
-		go ah.runSession(s)
+		go ah.runSession(s, d)
 		return nil
 	case frame.CloseConnection:
 		s, err := ah.store.GetByID(f.ConnectionID)
@@ -73,13 +74,21 @@ func (ah *AgentHandler) createSession(id uint32, conn net.Conn, disp dispatcher.
 	return s
 }
 
-func (ah *AgentHandler) runSession(s *session.Session) {
+func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatcher) {
 	err := s.Stream()
 	if err != nil {
 		// if session streaming is broken we shouldnt error out
 		// this must be logged and handler should proceed by closing the session
 		ah.logger.Error("failed to stream", slog.Any("error", err))
 	}
+
+	// stream ended - we must instruct the other end to close the session
+	closeFrame := frame.Frame{
+		ConnectionID: s.GetID(),
+		Ident:        frame.CloseConnection,
+	}
+
+	disp.Dispatch(&closeFrame)
 
 	// close session
 	err = ah.destroySession(s)
