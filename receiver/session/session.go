@@ -51,27 +51,16 @@ func (s *Session) GetID() uint32 {
 }
 
 func (s *Session) Close() error {
-	close(s.inbox)
-	err := s.conn.Close()
-	if err != nil {
-		return err
-	}
-
-	close(s.errChan)
-	close(s.closed)
-	return nil
+	return s.conn.Close()
 }
 
 // Receive method exists for receiving frames from a dispatcher
 // If the inbox of a session is full, receive returns an error,
 // and the caller can terminate the session
 func (s *Session) Receive(f *frame.Frame) error {
-	select {
-	case s.inbox <- f:
-		return nil
-	default:
-		return receiver.ErrCannotReceive
-	}
+	s.inbox <- f
+	return nil
+
 }
 
 func (s *Session) CloseConnection() error {

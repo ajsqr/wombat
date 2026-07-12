@@ -34,11 +34,10 @@ func (ss *SessionStore) GetByID(id uint32) (*Session, error) {
 }
 
 func (ss *SessionStore) Destroy(id uint32) {
-	s, ok := ss.store.Get(id)
+	_, ok := ss.store.Get(id)
 	if !ok {
 		return
 	}
 
-	close(s.inbox)
 	ss.store.Delete(id)
 }

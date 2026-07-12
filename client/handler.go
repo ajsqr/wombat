@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"log/slog"
 	"net"
 
@@ -34,7 +35,7 @@ type AgentHandler struct {
 // It is currently not implemented. Once the agent receives an Open
 // control frame, it needs to generate a new session and
 func (ah *AgentHandler) Handle(f *frame.Frame, d dispatcher.Dispatcher) error {
-	ah.logger.Info("received a control frame")
+	ah.logger.Info("received a control frame", slog.Any("frameIdentifier", f.Ident), slog.Any("connectionId", f.ConnectionID))
 	switch f.Ident {
 	case frame.OpenConnection:
 		// a new control frame to open a new connection
@@ -79,7 +80,7 @@ func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatche
 	if err != nil {
 		// if session streaming is broken we shouldnt error out
 		// this must be logged and handler should proceed by closing the session
-		ah.logger.Error("failed to stream", slog.Any("error", err))
+		ah.logger.Error("failed to stream", slog.Any("error", err), slog.Any("sessionID", s.GetID()))
 	}
 
 	// stream ended - we must instruct the other end to close the session
@@ -89,19 +90,24 @@ func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatche
 	}
 
 	disp.Dispatch(&closeFrame)
-
-	// close session
+	ah.logger.Info("dispatched close frame")
 	err = ah.destroySession(s)
 	if err != nil {
-		ah.logger.Error("failed to destroy session", slog.Any("error", err))
+		ah.logger.Error("failed to destroy session", slog.Any("error", err), slog.Any("sessionID", s.GetID()))
 	}
 
 }
 
 func (ah *AgentHandler) destroySession(s *session.Session) error {
+	ah.logger.Info("asked to close session", slog.Any("sessionID", s.GetID()))
 	err := s.Close()
+	if err != nil && errors.Is(err, net.ErrClosed) {
+		ah.logger.Info("ignoring session destroy as it is already closed", slog.Any("sessionID", s.GetID()))
+		return nil
+	}
+
 	if err != nil {
-		ah.logger.Error("failed to close session", slog.Any("error", err))
+		return err
 	}
 
 	ah.store.Destroy(s.GetID())
