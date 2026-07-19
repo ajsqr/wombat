@@ -30,12 +30,12 @@ Designed around a small set of composable components, Wombat separates transport
                              │
                      Wombat Server (VPS)
                              │
-                  Persistent TCP Tunnel
+                    Persistent TCP Tunnel
                              │
-                     Wombat Agent
+                        Wombat Agent
                              │
-                  Local TCP Service
-            (HTTP, API, Database, etc.)
+                     Local TCP Service
+                (HTTP, API, Database, etc.)
 ```
 
 The tunnel itself has no knowledge of the application protocol being transported. It simply carries framed TCP streams between the server and the agent.

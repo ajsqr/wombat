@@ -1,14 +1,27 @@
 package main
 
-import "github.com/ajsqr/wombat/server"
+import (
+	"encoding/json"
+	"flag"
+	"log/slog"
+	"os"
+
+	"github.com/ajsqr/wombat/server"
+)
 
 func main() {
-	cfg := server.Config{
-		TunnelAddr: "127.0.0.1:1231",
-		ServerAddr: "127.0.0.1:1232",
+	configFilePath := flag.String("config", "", "path to wombat-server config file")
+	flag.Parse()
+
+	content, err := os.ReadFile(*configFilePath)
+	if err != nil {
+		panic(err)
 	}
 
-	server := server.NewServer(&cfg)
-	err := server.Run()
-	panic(err)
+	var serverConfig server.ServerConfig
+	err = json.Unmarshal(content, &serverConfig)
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	wa := server.NewServer(&serverConfig, logger)
+	wa.Run()
 }
