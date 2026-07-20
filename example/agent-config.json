@@ -1,13 +1,13 @@
 {
-    "channels":[
+    "tunnels":[
         {
-            "tunnelAddr": "100.48.79.74:4001",
-            "localServer": "127.0.0.1:1233",
+            "tunnel": "100.48.79.74:4001",
+            "local": "127.0.0.1:1233",
             "name":"echo"
         },
         {
-            "tunnelAddr": "100.48.79.74:4002",
-            "localServer": "127.0.0.1:1234",
+            "tunnel": "100.48.79.74:4002",
+            "local": "127.0.0.1:1234",
             "name":"download"
         }
     ]

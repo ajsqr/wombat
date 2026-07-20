@@ -3,30 +3,33 @@ package server
 import (
 	"log/slog"
 	"sync"
+
+	"github.com/ajsqr/wombat/config"
 )
 
-type ServerConfig struct {
-	Channels []*ChannelConfig `json:"channels"`
-}
-
 type Server struct {
-	config *ServerConfig
+	config *config.ServerConfig
 	logger *slog.Logger
 }
 
-func NewServer(config *ServerConfig, logger *slog.Logger) *Server {
-	return &Server{
-		config: config,
-		logger: logger,
+func NewServer(logger *slog.Logger) (*Server, error) {
+	var serverConfig config.ServerConfig
+	err := config.LoadServerConfig(&serverConfig)
+	if err != nil {
+		return nil, err
 	}
+	return &Server{
+		config: &serverConfig,
+		logger: logger,
+	}, nil
 }
 
 func (s *Server) Run() {
 	wg := sync.WaitGroup{}
-	for _, channelConfig := range s.config.Channels {
-		logger := s.logger.With(slog.String("channel", channelConfig.Name))
+	for _, tunnelConfig := range s.config.Tunnels {
+		logger := s.logger.With(slog.String("channel", tunnelConfig.Name))
 		wg.Add(1)
-		channel := NewChannel(channelConfig, logger)
+		channel := NewTunnel(tunnelConfig, logger)
 		go channel.Run(&wg)
 	}
 

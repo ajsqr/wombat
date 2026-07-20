@@ -1,13 +1,13 @@
 {
-    "channels":[
+    "tunnels":[
         {
-            "tunnelAddr": "0.0.0.0:4001",
-            "serverAddr": "0.0.0.0:8001",
+            "tunnel": "0.0.0.0:4001",
+            "public": "0.0.0.0:8001",
             "name":"echo"
         },
         {
-            "tunnelAddr": "0.0.0.0:4002",
-            "serverAddr": "0.0.0.0:8002",
+            "tunnel": "0.0.0.0:4002",
+            "public": "0.0.0.0:8002",
             "name":"download"
         }
     ]

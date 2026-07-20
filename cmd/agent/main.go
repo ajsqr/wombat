@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"log/slog"
 	"os"
 
@@ -10,18 +8,12 @@ import (
 )
 
 func main() {
-	configFilePath := flag.String("config", "", "path to wombat-agent config file")
-	flag.Parse()
-
-	content, err := os.ReadFile(*configFilePath)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	wa, err := agent.NewAgent(logger)
 	if err != nil {
-		panic(err)
+		logger.Error("error initializing agent", slog.Any("error", err))
+		os.Exit(1)
 	}
 
-	var agentConfig agent.AgentConfig
-	err = json.Unmarshal(content, &agentConfig)
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	wa := agent.NewAgent(&agentConfig, logger)
 	wa.Run()
 }

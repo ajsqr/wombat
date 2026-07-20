@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"log/slog"
 	"os"
 
@@ -10,18 +8,12 @@ import (
 )
 
 func main() {
-	configFilePath := flag.String("config", "", "path to wombat-server config file")
-	flag.Parse()
-
-	content, err := os.ReadFile(*configFilePath)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	wa, err := server.NewServer(logger)
 	if err != nil {
-		panic(err)
+		logger.Error("error initializing server", slog.Any("error", err))
+		os.Exit(1)
 	}
 
-	var serverConfig server.ServerConfig
-	err = json.Unmarshal(content, &serverConfig)
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	wa := server.NewServer(&serverConfig, logger)
 	wa.Run()
 }
