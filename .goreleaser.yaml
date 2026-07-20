@@ -1,0 +1,59 @@
+version: 2
+
+project_name: wombat
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: server
+    binary: wombat-server
+    main: ./cmd/server
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+  - id: agent
+    binary: wombat-agent
+    main: ./cmd/agent
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .Binary }}_{{ .Os }}_{{ .Arch }}
+
+    formats:
+      - tar.gz
+
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  disable: false
+  sort: asc
+  use: github
+
+release:
+  draft: false
+  prerelease: auto
