@@ -27,6 +27,79 @@ curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/install.sh | bash
 
 For other operating systems, a matching version can be downloaded from the latest release.
 
+## Usage
+
+Wombat consists of two components:
+
+* **wombat-server** — Runs on a publicly accessible server and accepts incoming client connections.
+* **wombat-agent** — Runs on the machine hosting your local services and connects to the server.
+
+> **Note:** Sample configuration files are available in the repository's `examples/` directory.
+
+### Running `wombat-server`
+
+Create a `server-config.json` file in your user configuration directory:
+
+```json
+{
+  "tunnels": [
+    {
+      "name": "echo",
+      "tunnel": "<tunnel-ip>:<tunnel-port>",
+      "public": "<public-ip>:<public-port>"
+    }
+  ]
+}
+```
+
+The `tunnel` address is where the agent connects, while the `public` address is where clients connect.
+
+Start the server:
+
+```bash
+wombat-server
+```
+
+Or run it in the background using `nohup`:
+
+```bash
+nohup wombat-server > wombat-server.log 2>&1 &
+```
+
+### Running `wombat-agent`
+
+Create an `agent-config.json` file in your user configuration directory:
+
+```json
+{
+  "tunnels": [
+    {
+      "name": "echo",
+      "tunnel": "<tunnel-ip>:<tunnel-port>",
+      "local": "<local-ip>:<local-port>"
+    }
+  ]
+}
+```
+
+The `tunnel` address must match the server's tunnel endpoint. The `local` address is the local service you want to expose.
+
+Ensure `wombat-server` is already running, then start the agent:
+
+```bash
+wombat-agent
+```
+
+Or run it in the background:
+
+```bash
+nohup wombat-agent > wombat-agent.log 2>&1 &
+```
+
+Once the agent connects successfully, clients can access your local service through the server's configured `public` endpoint.
+
+> **Deployment:** Wombat does not require a specific deployment method. You are free to run `wombat-server` and `wombat-agent` however best suits your environment, whether that's directly as binaries, using `systemd`, `nohup`, `Docker`, or any other process manager.
+
 ## Architecture
 
 ```text
