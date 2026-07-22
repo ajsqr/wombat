@@ -1,25 +1,31 @@
 # 🦡 Wombat
 
-> **A reverse TCP tunneling service written in Go.**
+> **A lightweight reverse TCP tunneling service written in Go.**
 
-Wombat securely exposes locally running TCP services through a persistent reverse tunnel. It multiplexes multiple independent client connections over a single TCP connection while maintaining mirrored session state at both ends of the tunnel.
-
-Designed around a small set of composable components, Wombat separates transport, session management, and endpoint lifecycle, making each part independently testable and easy to reason about.
+Wombat is a lightweight TCP tunneling service that lets users easily expose their local services to the internet, bypassing NAT restrictions.
+Wombat creates isolated TCP tunnels for each service and uses it to multipex different client sessions. 
 
 ---
 
 ## Features
 
-* Multiplex multiple TCP streams over a single persistent tunnel
+* Multiplex multiple TCP sessions over isolated persistent tunnels
 * Custom binary framing protocol
 * Symmetric client/server architecture
 * Mirrored session lifecycle
-* Transport-agnostic tunnel implementation
-* Concurrent session handling
-* Component-level unit tests
-* Internet-tested deployment
+* Cross-platform (Linux, macOS, Windows)
 
 ---
+
+## Installation
+
+For *nix systems wombat server / agent can be easily installed using the guided installer 
+
+```.sh
+curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/install.sh | bash
+```
+
+For other operating systems, a matching version can be downloaded from the latest release.
 
 ## Architecture
 
@@ -30,7 +36,7 @@ Designed around a small set of composable components, Wombat separates transport
                              │
                      Wombat Server (VPS)
                              │
-                    Persistent TCP Tunnel
+                    Persistent TCP Tunnel(s)
                              │
                         Wombat Agent
                              │
@@ -88,8 +94,8 @@ Supported frame types:
 | OpenConnection  | Create a mirrored session |
 | CloseConnection | Tear down a session       |
 | DataFrame       | Transport TCP payload     |
-| Ping            | Reserved                  |
-| Pong            | Reserved                  |
+| Ping            | TBD                       |
+| Pong            | TBD                       |
 
 Connection IDs uniquely identify individual streams, allowing many independent sessions to coexist over one tunnel.
 
@@ -107,27 +113,6 @@ The current implementation supports:
 * Graceful handling of peer disconnects
 
 Current testing includes:
-
-* Concurrent HTTP requests
-* Streaming downloads (100 MB+)
-* Multi-session multiplexing over a single tunnel
-* Deployment across an AWS EC2 instance with a locally running agent
-
----
-
-## Motivation
-
-Reverse tunneling systems hide a surprising amount of engineering behind a simple interface.
-
-Wombat was built to explore those implementation details from first principles by designing and implementing each major component independently, including:
-
-* Binary framing
-* Session multiplexing
-* Transport abstraction
-* Concurrent stream management
-* Session lifecycle coordination
-
-The objective was to understand the architecture behind production-grade reverse tunneling systems by building one from scratch.
 
 ---
 
