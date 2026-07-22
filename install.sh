@@ -24,7 +24,7 @@ else
     echo "  1) Agent"
     echo "  2) Server"
 
-    read -rp "Choice [1-2]: " choice
+    read -rp "Choice [1-2]: " choice </dev/tty
 
     case "$choice" in
         1) binary="wombat-agent" ;;
