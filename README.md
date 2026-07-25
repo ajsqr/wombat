@@ -34,7 +34,7 @@ Wombat consists of two components:
 * **wombat-server** — Runs on a publicly accessible server and accepts incoming client connections.
 * **wombat-agent** — Runs on the machine hosting your local services and connects to the server.
 
-> **Note:** Sample configuration files are available in the repository's `examples/` directory.
+> **Note:** Sample configuration files are available in the repository's `example/` directory.
 
 ### Running `wombat-server`
 
