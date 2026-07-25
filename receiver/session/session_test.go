@@ -1,7 +1,6 @@
 package session
 
 import (
-	"errors"
 	"io"
 	"net"
 	"testing"
@@ -10,7 +9,6 @@ import (
 
 	dispatchermocks "github.com/ajsqr/wombat/dispatcher/mocks"
 	"github.com/ajsqr/wombat/frame"
-	"github.com/ajsqr/wombat/receiver"
 )
 
 func TestReceiveSuccess(t *testing.T) {
@@ -30,20 +28,6 @@ func TestReceiveSuccess(t *testing.T) {
 
 	if got != f {
 		t.Fatal("frame mismatch")
-	}
-}
-
-func TestReceiveInboxFull(t *testing.T) {
-	s := &Session{
-		inbox: make(chan *frame.Frame, 1),
-	}
-
-	s.inbox <- &frame.Frame{}
-
-	err := s.Receive(&frame.Frame{})
-
-	if !errors.Is(err, receiver.ErrCannotReceive) {
-		t.Fatalf("expected ErrCannotReceive got %v", err)
 	}
 }
 

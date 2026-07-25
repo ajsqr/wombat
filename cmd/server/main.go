@@ -7,6 +7,11 @@ import (
 	"github.com/ajsqr/wombat/server"
 )
 
+var (
+	commit  = "commit"
+	version = "version"
+)
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	wa, err := server.NewServer(logger)
@@ -15,5 +20,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	wa.Run()
+	serverCli := cli{
+		logger:  logger,
+		server:  wa,
+		commit:  commit,
+		version: version,
+	}
+
+	serverCli.run()
 }

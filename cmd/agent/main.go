@@ -7,6 +7,11 @@ import (
 	"github.com/ajsqr/wombat/agent"
 )
 
+var (
+	commit  = "commit"
+	version = "version"
+)
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	wa, err := agent.NewAgent(logger)
@@ -15,5 +20,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	wa.Run()
+	agentCli := cli{
+		agent:   wa,
+		logger:  logger,
+		version: version,
+		commit:  commit,
+	}
+
+	agentCli.run()
 }
