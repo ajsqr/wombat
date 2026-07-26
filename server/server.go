@@ -18,6 +18,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Server{
 		config: &serverConfig,
 		logger: logger,

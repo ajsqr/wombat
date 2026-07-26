@@ -28,12 +28,11 @@ type Tunnel struct {
 	handler endpoint.Endpoint
 }
 
-func NewTunnel(conn net.Conn, store *session.SessionStore, handler endpoint.Endpoint) *Tunnel {
+func NewTunnel(conn net.Conn, frameWriter *frame.FrameWriter, frameReader *frame.FrameReader, store *session.SessionStore, handler endpoint.Endpoint) *Tunnel {
 	tunnel := Tunnel{}
-
 	tunnel.conn = conn
-	tunnel.frameWriter = frame.NewWriter(conn)
-	tunnel.frameReader = frame.NewReader(conn)
+	tunnel.frameWriter = frameWriter
+	tunnel.frameReader = frameReader
 	tunnel.dispatchQueue = make(chan *frame.Frame, defaultQueueSize)
 	tunnel.storer = store
 	tunnel.errChan = make(chan error, 1)

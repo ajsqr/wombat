@@ -14,5 +14,6 @@ type AgentTunnelConfig struct {
 	// example 127.0.0.1:1234
 	Local string `json:"local"`
 	// Name is used to easily identify a tunnel
-	Name string `json:"name"`
+	Name      string `json:"name"`
+	TokenName string `json:"tokenName"`
 }
