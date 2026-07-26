@@ -46,7 +46,6 @@ func (t *Tunnel) Dispatch(f *frame.Frame) {
 
 func (t *Tunnel) Stream() error {
 	defer t.conn.Close()
-	defer close(t.dispatchQueue)
 	go t.recvLoop()
 	go t.sendLoop()
 	return <-t.errChan
