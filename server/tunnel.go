@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/ajsqr/wombat/auth"
 	envauther "github.com/ajsqr/wombat/auth/env"
@@ -14,6 +16,8 @@ import (
 	"github.com/ajsqr/wombat/frame"
 	"github.com/ajsqr/wombat/receiver/session"
 )
+
+const backOff = 5
 
 type Tunnel struct {
 	config  *config.ServerTunnelConfig
@@ -35,19 +39,31 @@ func NewTunnel(cfg *config.ServerTunnelConfig, logger *slog.Logger) *Tunnel {
 
 func (t *Tunnel) Run(wg *sync.WaitGroup) {
 	defer wg.Done()
-	handler := NewServerHandler(t.store, t.logger)
-	// start tunnel listener
-	t.logger.Info("creating tunnel connection")
 	listener, err := net.Listen("tcp", t.config.Tunnel)
 	if err != nil {
 		t.logger.Error("attempting to create a listener for the tunnel", slog.Any("error", err))
 		return
 	}
 
+	defer listener.Close()
+	for {
+		err := t.run(listener)
+		if err != nil {
+			t.logger.Error("tunnel failed", slog.Any("error", err))
+		}
+
+		time.Sleep(time.Second * backOff)
+	}
+
+}
+
+func (t *Tunnel) run(listener net.Listener) error {
+	handler := NewServerHandler(t.store, t.logger)
+	// start tunnel listener
+	t.logger.Info("creating tunnel connection")
 	conn, err := listener.Accept()
 	if err != nil {
-		t.logger.Error("attempting to accept tunnel connection", slog.Any("error", err))
-		return
+		return fmt.Errorf("attempting to accept tunnel connection : %w", err)
 	}
 
 	frameWriter := frame.NewWriter(conn)
@@ -56,29 +72,30 @@ func (t *Tunnel) Run(wg *sync.WaitGroup) {
 	t.logger.Info("authenticating tunnel connection")
 	err = t.handshake(frameReader, t.config)
 	if err != nil {
-		t.logger.Error("error during handshake", slog.Any("error", err))
 		conn.Close()
-		return
+		return fmt.Errorf("error during handshake : %w", err)
 	}
 
 	t.logger.Info("successfully autenticated tunnel")
 	tunnel := tunnel.NewTunnel(conn, frameWriter, frameReader, t.store, handler)
 	t.logger.Info("successfully established a tunnel")
-	go t.acceptConections(tunnel, t.store)
+
+	publicListener, err := net.Listen("tcp", t.config.Public)
+	if err != nil {
+		return fmt.Errorf("attempting to start listener : %w", err)
+	}
+
+	defer publicListener.Close()
+	go t.acceptConections(publicListener, tunnel, t.store)
 	err = tunnel.Stream()
 	if err != nil {
-		t.logger.Error("tunnel streaming failed", slog.Any("error", err))
-		return
+		return fmt.Errorf("tunnel streaming failed : %w", err)
 	}
+
+	return nil
 }
 
-func (t *Tunnel) acceptConections(disp dispatcher.Dispatcher, store *session.SessionStore) {
-	listener, err := net.Listen("tcp", t.config.Public)
-	if err != nil {
-		t.logger.Error("attempting to start listener", slog.Any("error", err))
-		return
-	}
-
+func (t *Tunnel) acceptConections(listener net.Listener, disp dispatcher.Dispatcher, store *session.SessionStore) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

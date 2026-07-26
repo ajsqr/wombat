@@ -1,7 +1,9 @@
 package server
 
 import (
+	"errors"
 	"log/slog"
+	"net"
 
 	"github.com/ajsqr/wombat/dispatcher"
 	"github.com/ajsqr/wombat/endpoint"
@@ -52,7 +54,7 @@ func (sh *ServersHandler) Handle(f *frame.Frame, disp dispatcher.Dispatcher) err
 
 func (sh *ServersHandler) destroySession(s *session.Session) error {
 	err := s.Close()
-	if err != nil {
+	if err != nil && !errors.Is(err, net.ErrClosed) {
 		sh.logger.Error("failed to close session", slog.Any("error", err))
 	}
 
