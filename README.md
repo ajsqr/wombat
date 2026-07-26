@@ -2,214 +2,307 @@
 
 > **A lightweight reverse TCP tunneling service written in Go.**
 
-Wombat is a lightweight TCP tunneling service that lets users easily expose their local services to the internet, bypassing NAT restrictions.
-Wombat creates isolated TCP tunnels for each service and uses it to multipex different client sessions. 
+Wombat is a lightweight reverse TCP tunneling service that securely exposes local TCP services to the internet through persistent, TLS-encrypted tunnels. Each configured service gets its own isolated tunnel, while multiple client connections are multiplexed over that tunnel using Wombat's custom binary framing protocol.
 
 ---
 
-## Features
+# Features
 
-* Multiplex multiple TCP sessions over isolated persistent tunnels
-* Custom binary framing protocol
-* Symmetric client/server architecture
-* Mirrored session lifecycle
-* Cross-platform (Linux, macOS, Windows)
+- TLS-encrypted persistent tunnels
+- Token-based tunnel authentication
+- Multiplex multiple TCP sessions over isolated tunnels
+- Custom binary framing protocol
+- Automatic tunnel reconnection
+- Cross-platform (Linux, macOS, Windows)
+- Generic TCP forwarding (HTTP, HTTPS, SSH, databases, MQTT, etc.)
 
 ---
 
-## Installation
+# Installation
 
-For *nix systems wombat server / agent can be easily installed using the guided installer 
+## Unix-like systems
 
-```.sh
+```bash
 curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/install.sh | bash
 ```
 
-For other operating systems, a matching version can be downloaded from the latest release.
+For Windows and other platforms, download the appropriate binary from the latest GitHub release.
 
-## Usage
+---
 
-Wombat consists of two components:
+# Quick Start
 
-* **wombat-server** — Runs on a publicly accessible server and accepts incoming client connections.
-* **wombat-agent** — Runs on the machine hosting your local services and connects to the server.
+## 1. Generate a private Certificate Authority
 
-> **Note:** Sample configuration files are available in the repository's `example/` directory.
+```bash
+mkdir certs
+cd certs
 
-### Running `wombat-server`
+openssl genrsa -out ca.key 4096
 
-Create a `server-config.json` file in your user configuration directory:
+openssl req \
+    -x509 \
+    -new \
+    -nodes \
+    -key ca.key \
+    -sha256 \
+    -days 3650 \
+    -out ca.crt \
+    -subj "/CN=Wombat CA"
+```
+
+## 2. Generate a server certificate
+
+```bash
+openssl genrsa -out server.key 4096
+```
+
+Create `server.cnf`
+
+```ini
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+distinguished_name = dn
+req_extensions = req_ext
+
+[dn]
+CN = localhost
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+```
+
+Generate the CSR:
+
+```bash
+openssl req \
+  -new \
+  -key server.key \
+  -out server.csr \
+  -config server.cnf
+```
+
+Sign it:
+
+```bash
+openssl x509 \
+  -req \
+  -in server.csr \
+  -CA ca.crt \
+  -CAkey ca.key \
+  -CAcreateserial \
+  -out server.crt \
+  -days 365 \
+  -sha256 \
+  -extensions req_ext \
+  -extfile server.cnf
+```
+
+The server uses `server.crt` and `server.key`. Agents only require `ca.crt`.
+
+---
+
+## 3. Shared Token
+
+Every tunnel is authenticated using a shared secret.
+
+Each tunnel specifies a `tokenName`. This is the **name of the environment variable** that contains the shared secret.
+
+Example configuration:
 
 ```json
 {
+  "tokenName": "echo"
+}
+```
+
+Before starting both the server and the agent:
+
+### Linux / macOS
+
+```bash
+export echo="my-super-secret-token"
+```
+
+### Windows PowerShell
+
+```powershell
+$env:echo="my-super-secret-token"
+```
+
+The server and the corresponding agent must use the same token value.
+
+---
+
+## 4. Configuration Directory
+
+Wombat automatically loads its configuration from the operating system's user configuration directory.
+
+| Platform | Directory |
+|----------|-----------|
+| Linux | `~/.config/wombat/` |
+| macOS | `~/Library/Application Support/wombat/` |
+| Windows | `%AppData%\wombat\` |
+
+Place the following files there:
+
+- `server-config.json`
+- `agent-config.json`
+
+TLS certificates may be stored anywhere and referenced by path.
+
+---
+
+## 5. Configure the Server
+
+```json
+{
+  "certPath": "/path/to/server.crt",
+  "keyPath": "/path/to/server.key",
   "tunnels": [
     {
       "name": "echo",
-      "tunnel": "<tunnel-ip>:<tunnel-port>",
-      "public": "<public-ip>:<public-port>"
+      "tunnel": "0.0.0.0:4001",
+      "public": "0.0.0.0:8001",
+      "tokenName": "echo"
     }
   ]
 }
 ```
 
-The `tunnel` address is where the agent connects, while the `public` address is where clients connect.
-
-Start the server:
+Run:
 
 ```bash
-wombat-server
+wombat-server run
 ```
 
-Or run it in the background using `nohup`:
+Check version:
 
 ```bash
-nohup wombat-server > wombat-server.log 2>&1 &
+wombat-server version
 ```
 
-### Running `wombat-agent`
+---
 
-Create an `agent-config.json` file in your user configuration directory:
+## 6. Configure the Agent
 
 ```json
 {
+  "caCertPath": "/path/to/ca.crt",
+  "serverName": "localhost",
   "tunnels": [
     {
       "name": "echo",
-      "tunnel": "<tunnel-ip>:<tunnel-port>",
-      "local": "<local-ip>:<local-port>"
+      "tunnel": "your-server:4001",
+      "local": "127.0.0.1:8080",
+      "tokenName": "echo"
     }
   ]
 }
 ```
 
-The `tunnel` address must match the server's tunnel endpoint. The `local` address is the local service you want to expose.
+`serverName` must match one of the DNS names in the server certificate's Subject Alternative Name (SAN).
 
-Ensure `wombat-server` is already running, then start the agent:
-
-```bash
-wombat-agent
-```
-
-Or run it in the background:
+Run:
 
 ```bash
-nohup wombat-agent > wombat-agent.log 2>&1 &
+wombat-agent run
 ```
 
-Once the agent connects successfully, clients can access your local service through the server's configured `public` endpoint.
+Check version:
 
-> **Deployment:** Wombat does not require a specific deployment method. You are free to run `wombat-server` and `wombat-agent` however best suits your environment, whether that's directly as binaries, using `systemd`, `nohup`, `Docker`, or any other process manager.
+```bash
+wombat-agent version
+```
 
-## Architecture
+Once connected, clients can connect to the configured public endpoint.
+
+---
+
+# Architecture
 
 ```text
-                         Internet
-                             │
-                      Client Connection
-                             │
-                     Wombat Server (VPS)
-                             │
-                    Persistent TCP Tunnel(s)
-                             │
-                        Wombat Agent
-                             │
-                     Local TCP Service
-                (HTTP, API, Database, etc.)
+Internet Client
+       │
+       ▼
+Wombat Server (Public TCP Listener)
+       │
+       ▼
+TLS-encrypted Persistent Tunnel
+       │
+       ▼
+Wombat Agent
+       │
+       ▼
+Local TCP Service
 ```
 
-The tunnel itself has no knowledge of the application protocol being transported. It simply carries framed TCP streams between the server and the agent.
+The public listener forwards raw TCP streams. Wombat encrypts only the persistent tunnel between the server and the agent, allowing protocols such as HTTPS, SSH and PostgreSQL to provide their own end-to-end encryption.
 
 ---
 
-## Design Philosophy
+# Design Philosophy
 
-Wombat is built around explicit ownership and separation of responsibilities.
+The transport layer is intentionally protocol-agnostic.
 
-### Tunnel
-
-Responsible only for transporting protocol frames between two endpoints.
-
-The tunnel has no knowledge of client sockets, local applications, or session creation. It simply delivers frames.
-
-### Session
-
-Represents a single TCP connection.
-
-A session converts bytes read from a socket into protocol frames and reconstructs incoming frames back into a byte stream.
-
-### Server
-
-The server accepts incoming client connections, creates sessions, and mirrors them on the remote agent.
-
-### Agent
-
-The agent establishes local connections to services running on the host machine and mirrors the session lifecycle initiated by the server.
-
-This separation allows the transport layer to remain completely independent of the applications using it.
+- **Tunnel** transports frames.
+- **Session** represents a single TCP connection.
+- **Server** accepts public connections and mirrors sessions.
+- **Agent** connects to local services and mirrors the server's session lifecycle.
 
 ---
 
-## Protocol
+# Protocol
 
-Logical TCP connections are multiplexed over a single persistent connection using a custom binary framing protocol.
+Each logical TCP connection is multiplexed over a persistent tunnel.
 
 Each frame contains:
 
-* Frame Type
-* Connection ID
-* Payload Length
-* Payload
+- Frame Type
+- Connection ID
+- Payload Length
+- Payload
 
-Supported frame types:
-
-| Frame           | Purpose                   |
-| --------------- | ------------------------- |
-| OpenConnection  | Create a mirrored session |
-| CloseConnection | Tear down a session       |
-| DataFrame       | Transport TCP payload     |
-| Ping            | TBD                       |
-| Pong            | TBD                       |
-
-Connection IDs uniquely identify individual streams, allowing many independent sessions to coexist over one tunnel.
+| Frame | Purpose |
+|-------|---------|
+| OpenConnection | Create mirrored session |
+| CloseConnection | Tear down session |
+| DataFrame | Transport TCP payload |
+| Ping | Reserved |
+| Pong | Reserved |
 
 ---
 
-## Current Capabilities
+# Current Capabilities
 
-The current implementation supports:
-
-* Reverse TCP tunneling
-* HTTP forwarding
-* Concurrent multiplexed sessions
-* Large streaming responses
-* Automatic session mirroring
-* Graceful handling of peer disconnects
-
-Current testing includes:
+- Reverse TCP tunneling
+- TLS-encrypted tunnels
+- Token-based authentication
+- Automatic reconnection
+- Concurrent multiplexed sessions
+- Generic TCP forwarding
+- Large streaming responses
 
 ---
 
-## Roadmap
+# Roadmap
 
-Planned improvements include:
-
-* TLS encryption
-* Mutual authentication
-* Automatic tunnel reconnection
-* Heartbeats and keepalive
-* Flow control
-* Protocol versioning
-* Compression
-* Metrics and observability
-* Benchmark suite
-* Configuration file support
+- Optional mutual TLS
+- Heartbeats / keepalive
+- Flow control
+- Protocol versioning
+- Compression
+- Metrics & observability
 
 ---
 
-## Why "Wombat"?
+# Why "Wombat"?
 
 Wombats are exceptional tunnel builders.
 
-They construct robust underground tunnel systems that quietly connect distant places through a single network.
-
-The name reflects the purpose of this project: building reliable tunnels that connect services without exposing them directly to the internet.
+Just like the animal, Wombat creates reliable tunnels that quietly connect distant places through a single network.
