@@ -19,7 +19,8 @@ type Frame struct {
 type FrameIdentifer uint32
 
 const (
-	OpenConnection FrameIdentifer = iota
+	Authentication FrameIdentifer = iota
+	OpenConnection
 	CloseConnection
 	Ping
 	Pong

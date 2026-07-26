@@ -63,7 +63,7 @@ func (r *FrameReader) readFrameIdentifier() (FrameIdentifer, error) {
 
 	fid = FrameIdentifer(binary.LittleEndian.Uint32(fidBytes))
 	switch fid {
-	case OpenConnection, CloseConnection, Ping, Pong, DataFrame:
+	case Authentication, OpenConnection, CloseConnection, Ping, Pong, DataFrame:
 	default:
 		return fid, ErrInvalidFrameIdentifier
 	}
