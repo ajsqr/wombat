@@ -34,3 +34,25 @@ builds:
         -s -w
         -X main.version={{ .Version }}
         -X main.commit={{ .ShortCommit }}
+archives:
+  - id: server
+    ids:
+      - server
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+  - id: agent
+    ids:
+      - agent
+    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
