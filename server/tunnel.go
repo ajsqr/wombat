@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"net"
@@ -20,6 +21,7 @@ import (
 const backOff = 5
 
 type Tunnel struct {
+	cert    tls.Certificate
 	config  *config.ServerTunnelConfig
 	store   *session.SessionStore
 	counter atomic.Uint32
@@ -27,19 +29,25 @@ type Tunnel struct {
 	logger  *slog.Logger
 }
 
-func NewTunnel(cfg *config.ServerTunnelConfig, logger *slog.Logger) *Tunnel {
+func NewTunnel(cfg *config.ServerTunnelConfig, cert tls.Certificate, logger *slog.Logger) *Tunnel {
 	var s Tunnel
 	s.config = cfg
 	s.store = session.NewSessionStore()
 	s.counter = atomic.Uint32{}
 	s.logger = logger
 	s.auther = envauther.NewEnvAuthenticator()
+	s.cert = cert
 	return &s
 }
 
 func (t *Tunnel) Run(wg *sync.WaitGroup) {
 	defer wg.Done()
-	listener, err := net.Listen("tcp", t.config.Tunnel)
+	cfg := &tls.Config{
+		Certificates: []tls.Certificate{t.cert},
+		MinVersion:   tls.VersionTLS13,
+	}
+
+	listener, err := tls.Listen("tcp", t.config.Tunnel, cfg)
 	if err != nil {
 		t.logger.Error("attempting to create a listener for the tunnel", slog.Any("error", err))
 		return

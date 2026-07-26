@@ -1,7 +1,9 @@
 package config
 
 type ServerConfig struct {
-	Tunnels []*ServerTunnelConfig `json:"tunnels"`
+	CertPath string                `json:"certPath"`
+	KeyPath  string                `json:"keyPath"`
+	Tunnels  []*ServerTunnelConfig `json:"tunnels"`
 }
 
 type ServerTunnelConfig struct {

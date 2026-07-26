@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"log/slog"
 	"sync"
 
@@ -8,6 +9,7 @@ import (
 )
 
 type Server struct {
+	cert   tls.Certificate
 	config *config.ServerConfig
 	logger *slog.Logger
 }
@@ -19,9 +21,15 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 		return nil, err
 	}
 
+	cert, err := tls.LoadX509KeyPair(serverConfig.CertPath, serverConfig.KeyPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
 		config: &serverConfig,
 		logger: logger,
+		cert:   cert,
 	}, nil
 }
 
@@ -30,7 +38,7 @@ func (s *Server) Run() {
 	for _, tunnelConfig := range s.config.Tunnels {
 		logger := s.logger.With(slog.String("channel", tunnelConfig.Name))
 		wg.Add(1)
-		channel := NewTunnel(tunnelConfig, logger)
+		channel := NewTunnel(tunnelConfig, s.cert, logger)
 		go channel.Run(&wg)
 	}
 

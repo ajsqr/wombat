@@ -1,7 +1,9 @@
 package config
 
 type AgentConfig struct {
-	Tunnels []*AgentTunnelConfig `json:"tunnels"`
+	CACertPath string               `json:"caCertPath"`
+	ServerName string               `json:"serverName"`
+	Tunnels    []*AgentTunnelConfig `json:"tunnels"`
 }
 
 type AgentTunnelConfig struct {
