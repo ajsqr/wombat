@@ -1,3 +1,4 @@
 build
 # Added by goreleaser init:
 dist/
+certs
