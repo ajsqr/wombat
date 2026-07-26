@@ -7,6 +7,7 @@ import (
 
 	"github.com/ajsqr/wombat/config"
 	"github.com/ajsqr/wombat/dispatcher/tunnel"
+	"github.com/ajsqr/wombat/frame"
 	"github.com/ajsqr/wombat/receiver/session"
 )
 
@@ -31,14 +32,24 @@ func (t *Tunnel) Run(wg *sync.WaitGroup) {
 		return
 	}
 
-	t.logger.Info("successfully connected to the tunnel")
+	frameWriter := frame.NewWriter(conn)
+	frameReader := frame.NewReader(conn)
+	t.logger.Info("authenticating tunnel")
+	err = t.handshake(frameWriter, t.config)
+	if err != nil {
+		t.logger.Error("error during handshake", slog.Any("error", err))
+		return
+	}
 
+	t.logger.Info("successfully authenticated tunnel connection")
 	sessionStore := session.NewSessionStore()
 	endpoint := NewClientHandler(sessionStore, t.config.Local, t.logger)
-	tunnel := tunnel.NewTunnel(conn, sessionStore, endpoint)
+	tunnel := tunnel.NewTunnel(conn, frameWriter, frameReader, sessionStore, endpoint)
+	t.logger.Info("successfully established tunnel connection")
 	err = tunnel.Stream()
 	if err != nil {
 		t.logger.Error("tunnel streaming failed", slog.Any("error", err))
 		return
 	}
+
 }

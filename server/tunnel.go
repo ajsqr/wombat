@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/ajsqr/wombat/auth"
+	envauther "github.com/ajsqr/wombat/auth/env"
 	"github.com/ajsqr/wombat/config"
 	"github.com/ajsqr/wombat/dispatcher"
 	"github.com/ajsqr/wombat/dispatcher/tunnel"
@@ -17,6 +19,7 @@ type Tunnel struct {
 	config  *config.ServerTunnelConfig
 	store   *session.SessionStore
 	counter atomic.Uint32
+	auther  auth.Authenticator
 	logger  *slog.Logger
 }
 
@@ -26,6 +29,7 @@ func NewTunnel(cfg *config.ServerTunnelConfig, logger *slog.Logger) *Tunnel {
 	s.store = session.NewSessionStore()
 	s.counter = atomic.Uint32{}
 	s.logger = logger
+	s.auther = envauther.NewEnvAuthenticator()
 	return &s
 }
 
@@ -46,7 +50,19 @@ func (t *Tunnel) Run(wg *sync.WaitGroup) {
 		return
 	}
 
-	tunnel := tunnel.NewTunnel(conn, t.store, handler)
+	frameWriter := frame.NewWriter(conn)
+	frameReader := frame.NewReader(conn)
+
+	t.logger.Info("authenticating tunnel connection")
+	err = t.handshake(frameReader, t.config)
+	if err != nil {
+		t.logger.Error("error during handshake", slog.Any("error", err))
+		conn.Close()
+		return
+	}
+
+	t.logger.Info("successfully autenticated tunnel")
+	tunnel := tunnel.NewTunnel(conn, frameWriter, frameReader, t.store, handler)
 	t.logger.Info("successfully established a tunnel")
 	go t.acceptConections(tunnel, t.store)
 	err = tunnel.Stream()
