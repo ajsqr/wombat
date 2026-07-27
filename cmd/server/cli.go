@@ -9,8 +9,6 @@ import (
 )
 
 type cli struct {
-	server  *server.Server
-	logger  *slog.Logger
 	version string
 	commit  string
 }
@@ -25,9 +23,14 @@ func (c *cli) run() {
 	case "version":
 		fmt.Printf("wombat-server %s build %s\n", c.version, c.commit)
 	case "run":
-		c.server.Run()
+		logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		wa, err := server.NewServer(logger)
+		if err != nil {
+			logger.Error("error initializing server", slog.Any("error", err))
+			os.Exit(1)
+		}
+		wa.Run()
 	default:
-		c.logger.Error("unexpected cli command", slog.String("cmd", baseCmd))
 		os.Exit(1)
 	}
 }
