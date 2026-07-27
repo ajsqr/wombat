@@ -125,4 +125,4 @@ echo "Config directory:"
 echo "  ${config_dir}"
 echo
 echo "Run:"
-echo "  ${binary} run"
+echo "  ${binary} version"

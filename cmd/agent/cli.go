@@ -9,8 +9,6 @@ import (
 )
 
 type cli struct {
-	agent   *agent.Agent
-	logger  *slog.Logger
 	version string
 	commit  string
 }
@@ -25,9 +23,14 @@ func (c *cli) run() {
 	case "version":
 		fmt.Printf("wombat-agent %s build %s\n", c.version, c.commit)
 	case "run":
-		c.agent.Run()
+		logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		wa, err := agent.NewAgent(logger)
+		if err != nil {
+			logger.Error("error initializing agent", slog.Any("error", err))
+			os.Exit(1)
+		}
+		wa.Run()
 	default:
-		c.logger.Error("unexpected cli command", slog.String("cmd", baseCmd))
 		os.Exit(1)
 	}
 }
