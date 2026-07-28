@@ -39,9 +39,42 @@ curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/install.sh | bash
 
 For Windows and other platforms, download the appropriate binary from the latest GitHub release.
 
+### Verify the installation
+
+```bash
+wombat-server version
+wombat-agent version
+```
+
+Example output:
+
+```text
+wombat-server v0.2.0 build abc1234
+wombat-agent v0.2.0 build abc1234
+```
+
 ---
 
 ## Quick Start
+
+
+Run the guided setup to generate certificates, create the required configuration files, and configure your first Wombat tunnel.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/readme_edits_v0.2.1/scripts/quickstart.sh | bash -s -- --force-certs
+```
+
+To reuse your existing Wombat certificates, omit the --force-certs flag:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/readme_edits_v0.2.1/scripts/quickstart.sh | bash
+```
+
+
+## Manual Setup
+
+Wombat uses TLS to secure the tunnel between the server and the agent. The following steps walk you through generating the required certificates, configuring authentication, and starting your first tunnel.
+
 
 ### 1. Generate a private Certificate Authority
 
