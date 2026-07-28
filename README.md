@@ -1,26 +1,37 @@
 # 🦡 Wombat
 
+[![Release](https://img.shields.io/github/v/release/ajsqr/wombat)](https://github.com/ajsqr/wombat/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ajsqr/wombat)](https://go.dev/)
+[![License](https://img.shields.io/github/license/ajsqr/wombat)](LICENSE)
+[![CI](https://github.com/ajsqr/wombat/actions/workflows/release.yml/badge.svg)](https://github.com/ajsqr/wombat/actions/workflows/release.yml)
+
 > **A lightweight reverse TCP tunneling service written in Go.**
 
-Wombat is a lightweight reverse TCP tunneling service that securely exposes local TCP services to the internet through persistent, TLS-encrypted tunnels. Each configured service gets its own isolated tunnel, while multiple client connections are multiplexed over that tunnel using Wombat's custom binary framing protocol.
+Wombat securely exposes local TCP services to the internet through persistent, TLS-encrypted tunnels. Each configured service gets its own dedicated tunnel, while multiple client connections are multiplexed efficiently over that tunnel using Wombat's custom binary framing protocol.
+
+## Learn more
+
+- 📖 **[Getting Started Guide](https://ajsqr.dev/blog/wombat-reverse-tunnel-tutorial/)** – Set up Wombat in minutes.
+- 📝 **[Building Wombat: A Reverse TCP Tunnel](https://ajsqr.dev/blog/building-wombat-a-reverse-tcp-tunnel/)** – Learn how Wombat's architecture and custom framing protocol work.
 
 ---
 
-# Features
+## Features
 
-- TLS-encrypted persistent tunnels
-- Token-based tunnel authentication
-- Multiplex multiple TCP sessions over isolated tunnels
-- Custom binary framing protocol
-- Automatic tunnel reconnection
-- Cross-platform (Linux, macOS, Windows)
-- Generic TCP forwarding (HTTP, HTTPS, SSH, databases, MQTT, etc.)
+- ✅ TLS-encrypted persistent tunnels
+- ✅ One persistent tunnel per configured service
+- ✅ Multiplex multiple TCP connections over dedicated tunnels
+- ✅ Token-based tunnel authentication
+- ✅ Custom binary framing protocol
+- ✅ Automatic tunnel reconnection
+- ✅ Cross-platform (Linux, macOS, Windows)
+- ✅ Forward any TCP service (HTTP, HTTPS, SSH, databases, MQTT, etc.)
 
 ---
 
-# Installation
+## Installation
 
-## Unix-like systems
+### Unix-like systems
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/install.sh | bash
@@ -30,9 +41,9 @@ For Windows and other platforms, download the appropriate binary from the latest
 
 ---
 
-# Quick Start
+## Quick Start
 
-## 1. Generate a private Certificate Authority
+### 1. Generate a private Certificate Authority
 
 ```bash
 mkdir certs
@@ -51,7 +62,7 @@ openssl req \
     -subj "/CN=Wombat CA"
 ```
 
-## 2. Generate a server certificate
+### 2. Generate a server certificate
 
 ```bash
 openssl genrsa -out server.key 4096
@@ -107,7 +118,7 @@ The server uses `server.crt` and `server.key`. Agents only require `ca.crt`.
 
 ---
 
-## 3. Shared Token
+### 3. Shared Token
 
 Every tunnel is authenticated using a shared secret.
 
@@ -123,13 +134,13 @@ Example configuration:
 
 Before starting both the server and the agent:
 
-### Linux / macOS
+#### Linux / macOS
 
 ```bash
 export echo="my-super-secret-token"
 ```
 
-### Windows PowerShell
+#### Windows PowerShell
 
 ```powershell
 $env:echo="my-super-secret-token"
@@ -139,7 +150,7 @@ The server and the corresponding agent must use the same token value.
 
 ---
 
-## 4. Configuration Directory
+### 4. Configuration Directory
 
 Wombat automatically loads its configuration from the operating system's user configuration directory.
 
@@ -158,7 +169,7 @@ TLS certificates may be stored anywhere and referenced by path.
 
 ---
 
-## 5. Configure the Server
+### 5. Configure the Server
 
 ```json
 {
@@ -189,7 +200,7 @@ wombat-server version
 
 ---
 
-## 6. Configure the Agent
+### 6. Configure the Agent
 
 ```json
 {
@@ -224,7 +235,7 @@ Once connected, clients can connect to the configured public endpoint.
 
 ---
 
-# Architecture
+## Architecture
 
 ```text
 Internet Client
@@ -246,7 +257,7 @@ The public listener forwards raw TCP streams. Wombat encrypts only the persisten
 
 ---
 
-# Design Philosophy
+## Design Philosophy
 
 The transport layer is intentionally protocol-agnostic.
 
@@ -257,7 +268,7 @@ The transport layer is intentionally protocol-agnostic.
 
 ---
 
-# Protocol
+## Protocol
 
 Each logical TCP connection is multiplexed over a persistent tunnel.
 
@@ -278,19 +289,8 @@ Each frame contains:
 
 ---
 
-# Current Capabilities
 
-- Reverse TCP tunneling
-- TLS-encrypted tunnels
-- Token-based authentication
-- Automatic reconnection
-- Concurrent multiplexed sessions
-- Generic TCP forwarding
-- Large streaming responses
-
----
-
-# Roadmap
+## Roadmap
 
 - Optional mutual TLS
 - Heartbeats / keepalive
@@ -301,7 +301,7 @@ Each frame contains:
 
 ---
 
-# Why "Wombat"?
+## Why "Wombat"?
 
 Wombats are exceptional tunnel builders.
 
