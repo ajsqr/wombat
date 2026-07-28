@@ -1,5 +1,10 @@
 # 🦡 Wombat
 
+[![Release](https://img.shields.io/github/v/release/ajsqr/wombat)](https://github.com/ajsqr/wombat/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ajsqr/wombat)](https://go.dev/)
+[![License](https://img.shields.io/github/license/ajsqr/wombat)](LICENSE)
+[![CI](https://github.com/ajsqr/wombat/actions/workflows/release.yml/badge.svg)](https://github.com/ajsqr/wombat/actions/workflows/release.yml)
+
 > **A lightweight reverse TCP tunneling service written in Go.**
 
 Wombat is a lightweight reverse TCP tunneling service that securely exposes local TCP services to the internet through persistent, TLS-encrypted tunnels. Each configured service gets its own isolated tunnel, while multiple client connections are multiplexed over that tunnel using Wombat's custom binary framing protocol.
