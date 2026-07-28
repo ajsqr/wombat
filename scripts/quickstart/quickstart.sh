@@ -46,8 +46,6 @@ if [[ "$FORCE_CERTS" == "true" ]]; then
     rm -f "$CERT_DIR"/ca.* "$CERT_DIR"/server.*
 fi
 
-
-
 echo
 echo -e "${CYAN}${BOLD}Let's configure your first tunnel.${RESET}"
 echo
@@ -55,7 +53,7 @@ echo -e "${YELLOW}Press Enter to accept the defaults.${RESET}"
 
 echo
 echo -e "${GREEN}${BOLD}1. Local service${RESET}"
-echo "The address of the TCP service running on the same machine as wombat-agent which you would like to expose."
+echo "The application or service (on localhost) you want Wombat to make accessible over the internet."
 echo "Examples: 127.0.0.1:8080 (web app), localhost:5432 (PostgreSQL), localhost:22 (SSH)"
 prompt LOCAL_ADDR "Local service [127.0.0.1:8080]: "
 LOCAL_ADDR=${LOCAL_ADDR:-127.0.0.1:8080}
@@ -184,6 +182,14 @@ echo
 echo "If your application uses a different address,"
 echo "run this script again and update the Local service."
 
+echo -e "${YELLOW}${BOLD}Note${RESET}"
+echo "If you later move wombat-server or wombat-agent to another machine,"
+echo "copy the contents of:"
+echo
+echo "  $CERT_DIR"
+echo
+echo "to the new machine as well."
+
 echo
 echo -e "${CYAN}${BOLD}Step 1 - Start the Wombat server${RESET}"
 echo "Open a new terminal and run:"
@@ -199,12 +205,9 @@ echo "  source \"$CONFIG_DIR/env.sh\""
 echo "  wombat-agent run"
 
 echo
-echo -e "${CYAN}${BOLD}Step 3 - Connect to your service${RESET}"
-echo "Once the agent connects to the server,"
 echo
-echo "  $LOCAL_ADDR"
-echo
-echo "will be available at"
+echo -e "${CYAN}${BOLD}Step 3 - Access your service${RESET}"
+echo "Once the agent connects to the server, your service will be available at:"
 echo
 echo "  $PUBLIC_ADDR"
 
