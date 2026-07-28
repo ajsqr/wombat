@@ -12,6 +12,12 @@ CYAN='\033[1;36m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
+prompt() {
+    local var="$1"
+    local message="$2"
+    read -r -p "$message" "$var" </dev/tty
+}
+
 FORCE_CERTS=false
 
 while [[ $# -gt 0 ]]; do
@@ -51,14 +57,14 @@ echo
 echo -e "${GREEN}${BOLD}1. Local service${RESET}"
 echo "The address of the TCP service running on the same machine as wombat-agent which you would like to expose."
 echo "Examples: 127.0.0.1:8080 (web app), localhost:5432 (PostgreSQL), localhost:22 (SSH)"
-read -rp "Local service [127.0.0.1:8080]: " LOCAL_ADDR
+prompt LOCAL_ADDR "Local service [127.0.0.1:8080]: "
 LOCAL_ADDR=${LOCAL_ADDR:-127.0.0.1:8080}
 
 echo
 echo -e "${GREEN}${BOLD}2. Public address${RESET}"
 echo "This is where your users will connect."
 echo "Example: demo.example.com:80 or 13.45.67.89:8001"
-read -rp "Public address [0.0.0.0:8001]: " PUBLIC_ADDR
+prompt PUBLIC_ADDR "Public address [0.0.0.0:8001]: "
 PUBLIC_ADDR=${PUBLIC_ADDR:-0.0.0.0:8001}
 
 echo
@@ -66,7 +72,8 @@ echo -e "${GREEN}${BOLD}3. Tunnel address${RESET}"
 echo "The address wombat-agent uses to connect to wombat-server."
 echo "This address is used internally by Wombat and should not be used by anyone else."
 echo "Example: demo.example.com:4001"
-read -rp "Tunnel address [localhost:4001]: " TUNNEL_ADDR
+
+prompt TUNNEL_ADDR "Tunnel address [localhost:4001]: "
 TUNNEL_ADDR=${TUNNEL_ADDR:-localhost:4001}
 echo
 
