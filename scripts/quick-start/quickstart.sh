@@ -87,18 +87,23 @@ export WOMBAT_TOKEN="$TOKEN"
 EOF
 chmod +x "$CONFIG_DIR/env.sh"
 
-if [[ -f "$CERT_DIR/ca.crt" && -f "$CERT_DIR/server.crt" ]]; then
-    echo -e "${GREEN}Using existing certificates.${RESET}"
-else
+if [[ "$FORCE_CERTS" == "true" ]] || \
+   [[ ! -f "$CERT_DIR/ca.crt" ]] || \
+   [[ ! -f "$CERT_DIR/server.crt" ]]; then
 
-echo -e "${CYAN}Generating Certificate Authority...${RESET}"
-openssl genrsa -out "$CERT_DIR/ca.key" 4096 >/dev/null 2>&1
-openssl req -x509 -new -nodes -key "$CERT_DIR/ca.key" -sha256 -days 3650 -subj "/CN=Wombat CA" -out "$CERT_DIR/ca.crt" >/dev/null 2>&1
+    echo -e "${CYAN}Generating Certificate Authority...${RESET}"
+    openssl genrsa -out "$CERT_DIR/ca.key" 4096 >/dev/null 2>&1
+    openssl req -x509 -new -nodes \
+        -key "$CERT_DIR/ca.key" \
+        -sha256 \
+        -days 3650 \
+        -subj "/CN=Wombat CA" \
+        -out "$CERT_DIR/ca.crt" >/dev/null 2>&1
 
-echo -e "${CYAN}Generating server certificate...${RESET}"
-openssl genrsa -out "$CERT_DIR/server.key" 4096 >/dev/null 2>&1
+    echo -e "${CYAN}Generating server certificate...${RESET}"
+    openssl genrsa -out "$CERT_DIR/server.key" 4096 >/dev/null 2>&1
 
-cat > "$CERT_DIR/server.cnf" <<EOF
+    cat > "$CERT_DIR/server.cnf" <<EOF
 [req]
 prompt=no
 distinguished_name=dn
@@ -114,8 +119,25 @@ subjectAltName=@alt_names
 DNS.1=$SERVER_NAME
 EOF
 
-openssl req -new -key "$CERT_DIR/server.key" -out "$CERT_DIR/server.csr" -config "$CERT_DIR/server.cnf" >/dev/null 2>&1
-openssl x509 -req -in "$CERT_DIR/server.csr" -CA "$CERT_DIR/ca.crt" -CAkey "$CERT_DIR/ca.key" -CAcreateserial -out "$CERT_DIR/server.crt" -days 365 -sha256 -extensions req_ext -extfile "$CERT_DIR/server.cnf" >/dev/null 2>&1
+    openssl req \
+        -new \
+        -key "$CERT_DIR/server.key" \
+        -out "$CERT_DIR/server.csr" \
+        -config "$CERT_DIR/server.cnf" >/dev/null 2>&1
+
+    openssl x509 \
+        -req \
+        -in "$CERT_DIR/server.csr" \
+        -CA "$CERT_DIR/ca.crt" \
+        -CAkey "$CERT_DIR/ca.key" \
+        -CAcreateserial \
+        -out "$CERT_DIR/server.crt" \
+        -days 365 \
+        -sha256 \
+        -extensions req_ext \
+        -extfile "$CERT_DIR/server.cnf" >/dev/null 2>&1
+else
+    echo -e "${GREEN}Using existing certificates.${RESET}"
 fi
 
 cat > "$CONFIG_DIR/server-config.json" <<EOF
