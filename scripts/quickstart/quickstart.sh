@@ -61,18 +61,16 @@ LOCAL_ADDR=${LOCAL_ADDR:-127.0.0.1:8080}
 echo
 echo -e "${GREEN}${BOLD}2. Public address${RESET}"
 echo "This is where your users will connect."
-echo "Example: demo.example.com:80 or 13.45.67.89:8001"
-prompt PUBLIC_ADDR "Public address [0.0.0.0:8001]: "
-PUBLIC_ADDR=${PUBLIC_ADDR:-0.0.0.0:8001}
+prompt PUBLIC_ADDR "Public address [127.0.0.1:8001]: "
+PUBLIC_ADDR=${PUBLIC_ADDR:-127.0.0.1:8001}
 
 echo
 echo -e "${GREEN}${BOLD}3. Tunnel address${RESET}"
 echo "The address wombat-agent uses to connect to wombat-server."
 echo "This address is used internally by Wombat and should not be used by anyone else."
-echo "Example: demo.example.com:4001"
 
-prompt TUNNEL_ADDR "Tunnel address [localhost:4001]: "
-TUNNEL_ADDR=${TUNNEL_ADDR:-localhost:4001}
+prompt TUNNEL_ADDR "Tunnel address [127.0.0.1:4001]: "
+TUNNEL_ADDR=${TUNNEL_ADDR:-127.0.0.1:4001}
 echo
 
 SERVER_NAME="${TUNNEL_ADDR%:*}"
