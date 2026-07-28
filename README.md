@@ -55,7 +55,7 @@ wombat-agent v0.2.0 build abc1234
 
 ---
 
-## Quick Start
+## Quickstart 
 
 
 Run the guided setup to generate certificates, create the required configuration files, and configure your first Wombat tunnel.
@@ -70,8 +70,10 @@ To reuse your existing Wombat certificates, omit the --force-certs flag:
 curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/main/scripts/quickstart/quickstart.sh | bash
 ```
 
+> **Note**
+> The quickstart is intended for local development and testing. For production deployments, follow the manual setup guide below.
 
-## Manual Setup
+## Manual Setup 
 
 Wombat uses TLS to secure the tunnel between the server and the agent. The following steps walk you through generating the required certificates, configuring authentication, and starting your first tunnel.
 
