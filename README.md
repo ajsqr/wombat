@@ -61,13 +61,13 @@ wombat-agent v0.2.0 build abc1234
 Run the guided setup to generate certificates, create the required configuration files, and configure your first Wombat tunnel.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/quickstart-cli/scripts/quickstart.sh | bash -s -- --force-certs
+curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/quickstart-cli/scripts/quickstart/quickstart.sh | bash -s -- --force-certs
 ```
 
 To reuse your existing Wombat certificates, omit the --force-certs flag:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/quickstart-cli/scripts/quickstart.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ajsqr/wombat/quickstart-cli/scripts/quickstart/quickstart.sh | bash
 ```
 
 
