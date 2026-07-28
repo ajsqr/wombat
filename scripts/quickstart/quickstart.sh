@@ -114,7 +114,7 @@ CN=$SERVER_NAME
 subjectAltName=@alt_names
 
 [alt_names]
-DNS.1=$SERVER_NAME
+IP.1=$SERVER_NAME
 EOF
 
     openssl req \
