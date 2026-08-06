@@ -77,10 +77,19 @@ func (ah *AgentHandler) createSession(id uint32, conn net.Conn, disp dispatcher.
 
 func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatcher) {
 	err := s.Stream()
-	if err != nil {
-		// if session streaming is broken we shouldnt error out
-		// this must be logged and handler should proceed by closing the session
-		ah.logger.Error("failed to stream", slog.Any("error", err), slog.Any("sessionID", s.GetID()))
+	if err == nil {
+		// stream ended without any errors
+		// likely because it was closed because of a close-connection-frame from server
+
+	} else if errors.Is(err, net.ErrClosed) {
+		// stream ended because the connection closed.
+		// proceed with removing the session from store
+	} else {
+		// stream ended because of an unexpected reason
+		// teardown required
+		if err := ah.destroySession(s); err != nil {
+			ah.logger.Error("unexpected error while destroying session", slog.Any("error", err))
+		}
 	}
 
 	// stream ended - we must instruct the other end to close the session
@@ -90,26 +99,16 @@ func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatche
 	}
 
 	disp.Dispatch(&closeFrame)
-	ah.logger.Info("dispatched close frame")
-	err = ah.destroySession(s)
-	if err != nil {
-		ah.logger.Error("failed to destroy session", slog.Any("error", err), slog.Any("sessionID", s.GetID()))
-	}
-
+	ah.store.Destroy(s.GetID())
+	ah.logger.Info("session life-cycle ended", slog.Any("sessionID", s.GetID()))
 }
 
 func (ah *AgentHandler) destroySession(s *session.Session) error {
 	ah.logger.Info("asked to close session", slog.Any("sessionID", s.GetID()))
 	err := s.Close()
-	if err != nil && errors.Is(err, net.ErrClosed) {
-		ah.logger.Info("ignoring session destroy as it is already closed", slog.Any("sessionID", s.GetID()))
-		return nil
-	}
-
 	if err != nil {
 		return err
 	}
 
-	ah.store.Destroy(s.GetID())
 	return nil
 }
