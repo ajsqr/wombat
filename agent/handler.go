@@ -87,6 +87,7 @@ func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatche
 	} else {
 		// stream ended because of an unexpected reason
 		// teardown required
+		ah.logger.Error("session streaming failed", slog.Any("error", err), slog.Any("sessionID", s.GetID()))
 		if err := ah.destroySession(s); err != nil {
 			ah.logger.Error("unexpected error while destroying session", slog.Any("error", err))
 		}
