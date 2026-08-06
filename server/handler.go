@@ -8,6 +8,7 @@ import (
 	"github.com/ajsqr/wombat/dispatcher"
 	"github.com/ajsqr/wombat/endpoint"
 	"github.com/ajsqr/wombat/frame"
+	"github.com/ajsqr/wombat/receiver"
 	"github.com/ajsqr/wombat/receiver/session"
 )
 
@@ -36,7 +37,12 @@ func (sh *ServersHandler) Handle(f *frame.Frame, disp dispatcher.Dispatcher) err
 	case frame.CloseConnection:
 		// client closed the connection
 		s, err := sh.store.GetByID(f.ConnectionID)
-		if err != nil {
+		switch err {
+		case nil:
+		case receiver.ErrSessionNotFound:
+			sh.logger.Warn("attempting to handle close-connection frame", slog.Any("error", err))
+			return nil
+		default:
 			sh.logger.Error("attempting to handle close-connection frame", slog.Any("error", err))
 			return nil
 		}
