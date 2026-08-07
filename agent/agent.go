@@ -38,7 +38,7 @@ func NewAgent(logger *slog.Logger) (*Agent, error) {
 func (a *Agent) Run() {
 	wg := sync.WaitGroup{}
 	for _, channelConfig := range a.config.Tunnels {
-		logger := a.logger.With(slog.String("channel", channelConfig.Name))
+		logger := a.logger.With(slog.String("tunnel", channelConfig.Name))
 		wg.Add(1)
 		channel := NewTunnel(channelConfig, a.caCert, a.serverName, logger)
 		go channel.Run(&wg)
