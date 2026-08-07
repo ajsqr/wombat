@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -126,33 +127,42 @@ func (t *Tunnel) acceptConections(listener net.Listener, disp dispatcher.Dispatc
 
 func (t *Tunnel) runSession(sess *session.Session, disp dispatcher.Dispatcher) {
 	err := sess.Stream()
-	if err != nil {
-		// if session streaming is broken we shouldnt error out
-		// this must be logged and handler should proceed by closing the session
-		t.logger.Error("failed to stream", slog.Any("error", err))
+	if err == nil {
+		// stream ended without any errors
+		// likely because it was closed because of a close-connection-frame
+	} else if errors.Is(err, net.ErrClosed) {
+		// stream ended because the connection closed.
+		// proceed with removing the session from store
+	} else {
+		// stream ended because of an unexpected reason
+		// teardown required
+		t.logger.Error("session streaming failed", slog.Any("error", err), slog.Any("sessionID", sess.GetID()))
+		if err := t.destroySession(sess); err != nil {
+			t.logger.Error("unexpected error while destroying session", slog.Any("error", err))
+		}
 	}
 
-	// stream ended - we must instruct the other end to close the session
-	closeFrame := frame.Frame{
-		ConnectionID: sess.GetID(),
-		Ident:        frame.CloseConnection,
+	if sess.NotifyTunnelOnClose {
+		// stream ended - we must instruct the other end to close the session
+		closeFrame := frame.Frame{
+			ConnectionID: sess.GetID(),
+			Ident:        frame.CloseConnection,
+		}
+
+		disp.Dispatch(&closeFrame)
+		t.logger.Info("dispatched a CloseConnection frame", slog.Any("sessionID", sess.GetID()))
 	}
 
-	disp.Dispatch(&closeFrame)
-	// close session
-	err = t.destroySession(sess)
-	if err != nil {
-		t.logger.Error("failed to destroy session", slog.Any("error", err))
-	}
+	t.store.Destroy(sess.GetID())
 
 }
 
 func (t *Tunnel) destroySession(sess *session.Session) error {
+	t.logger.Info("asked to close session", slog.Any("sessionID", sess.GetID()))
 	err := sess.Close()
 	if err != nil {
 		t.logger.Error("failed to close session", slog.Any("error", err))
 	}
 
-	t.store.Destroy(sess.GetID())
 	return nil
 }

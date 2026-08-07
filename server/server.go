@@ -36,7 +36,7 @@ func NewServer(logger *slog.Logger) (*Server, error) {
 func (s *Server) Run() {
 	wg := sync.WaitGroup{}
 	for _, tunnelConfig := range s.config.Tunnels {
-		logger := s.logger.With(slog.String("channel", tunnelConfig.Name))
+		logger := s.logger.With(slog.String("tunnel", tunnelConfig.Name))
 		wg.Add(1)
 		channel := NewTunnel(tunnelConfig, s.cert, logger)
 		go channel.Run(&wg)

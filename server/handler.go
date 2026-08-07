@@ -47,6 +47,9 @@ func (sh *ServersHandler) Handle(f *frame.Frame, disp dispatcher.Dispatcher) err
 			return nil
 		}
 
+		// this session was closed because the tunnel requested to do so
+		// the receiver should not send another duplicate close frane
+		s.NotifyTunnelOnClose = false
 		err = sh.destroySession(s)
 		if err != nil {
 			sh.logger.Error("attempting to destroy session", slog.Any("error", err))

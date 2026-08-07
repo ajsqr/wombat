@@ -35,7 +35,6 @@ type AgentHandler struct {
 // It is currently not implemented. Once the agent receives an Open
 // control frame, it needs to generate a new session and
 func (ah *AgentHandler) Handle(f *frame.Frame, d dispatcher.Dispatcher) error {
-	ah.logger.Info("received a control frame", slog.Any("frameIdentifier", f.Ident), slog.Any("connectionId", f.ConnectionID))
 	switch f.Ident {
 	case frame.OpenConnection:
 		// a new control frame to open a new connection
@@ -56,6 +55,7 @@ func (ah *AgentHandler) Handle(f *frame.Frame, d dispatcher.Dispatcher) error {
 			return nil
 		}
 
+		s.NotifyTunnelOnClose = false
 		err = ah.destroySession(s)
 		if err != nil {
 			ah.logger.Error("attempting to destroy session", slog.Any("error", err))
@@ -93,15 +93,19 @@ func (ah *AgentHandler) runSession(s *session.Session, disp dispatcher.Dispatche
 		}
 	}
 
-	// stream ended - we must instruct the other end to close the session
-	closeFrame := frame.Frame{
-		ConnectionID: s.GetID(),
-		Ident:        frame.CloseConnection,
+	if s.NotifyTunnelOnClose {
+		// stream ended - we must instruct the other end to close the session
+		closeFrame := frame.Frame{
+			ConnectionID: s.GetID(),
+			Ident:        frame.CloseConnection,
+		}
+
+		disp.Dispatch(&closeFrame)
+		ah.logger.Info("dispatched a CloseConnection frame", slog.Any("sessionID", s.GetID()))
 	}
 
-	disp.Dispatch(&closeFrame)
 	ah.store.Destroy(s.GetID())
-	ah.logger.Info("session life-cycle ended", slog.Any("sessionID", s.GetID()))
+	ah.logger.Info("session lifecycle ended", slog.Any("sessionID", s.GetID()))
 }
 
 func (ah *AgentHandler) destroySession(s *session.Session) error {
