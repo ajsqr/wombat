@@ -32,6 +32,11 @@ type Session struct {
 	bufferSize int
 	// disp deals with frame transportation between a session and the tunnel
 	disp dispatcher.Dispatcher
+	// NotifyTunnelOnClose is used to to know if a close frame needs to be sent once a session is closed
+	// a session can be closed abruptly from the owner end and upon instruction from tunnel
+	// for the later case a follow up close-frame is not required
+	// this flag tracks that requirement
+	NotifyTunnelOnClose bool
 }
 
 func NewSession(id uint32, conn net.Conn, disp dispatcher.Dispatcher) *Session {
@@ -43,6 +48,7 @@ func NewSession(id uint32, conn net.Conn, disp dispatcher.Dispatcher) *Session {
 	s.closed = make(chan struct{})
 	s.bufferSize = defaultBufferSize
 	s.disp = disp
+	s.NotifyTunnelOnClose = true
 	return &s
 }
 
